@@ -14,8 +14,7 @@
 -export([
          start_link/0,
          best_bid_updated/2,
-         best_ask_updated/2,
-         subscribe/1
+         best_ask_updated/2
         ]).
 
 %% gen_server callbacks
@@ -31,7 +30,9 @@
 -include("exchange.hrl").
 
 -record(state, {
-          best_price_subscribers = [] :: [pid()]
+          connection :: pid() | undefined,
+          channel :: pid() | undefined,
+          consumer_tag :: binary() | undefined
          }).
 
 %%%===================================================================
@@ -49,16 +50,12 @@ start_link() ->
     gen_server:start_link({local, ?SERVER}, ?MODULE, [], []).
 
 best_bid_updated(Pair, Price) ->
-    lager:info("New best bid for ~s: ~p", [Pair, Price]),
+    lager:debug("New best bid for ~s: ~p", [Pair, Price]),
     gen_server:cast(?SERVER, {best, bid, Pair, Price}).
 
 best_ask_updated(Pair, Price) ->
-    lager:info("New best ask for ~s: ~p", [Pair, Price]),
+    lager:debug("New best ask for ~s: ~p", [Pair, Price]),
     gen_server:cast(?SERVER, {best, ask, Pair, Price}).
-
-subscribe(Pid) ->
-    lager:info("Subscribing ~p to best prices", [Pid]),
-    gen_server:cast(?SERVER, {subscribe, Pid}).
 
 %%%===================================================================
 %%% gen_server callbacks
@@ -76,7 +73,44 @@ subscribe(Pid) ->
 %% @end
 %%--------------------------------------------------------------------
 init([]) ->
-    {ok, #state{}}.
+    DefaultParama = #amqp_params_network{},
+
+    Settings = application:get_all_env(amqp_client),
+    Host = proplists:get_value(host, Settings, DefaultParama#amqp_params_network.host),
+    Port = proplists:get_value(port, Settings, DefaultParama#amqp_params_network.port),
+
+    Username = proplists:get_value(username, Settings, DefaultParama#amqp_params_network.username),
+    Password = proplists:get_value(password, Settings, DefaultParama#amqp_params_network.password),
+
+    VHost = proplists:get_value(virtual_host, Settings, DefaultParama#amqp_params_network.virtual_host),
+    Heartbeat = proplists:get_value(heartbeat, Settings, DefaultParama#amqp_params_network.heartbeat),
+
+    AmqpParams = #amqp_params_network{
+                    host = Host,
+                    port = Port,
+                    username = Username,
+                    password = Password,
+                    virtual_host = VHost,
+                    heartbeat = Heartbeat
+                   },
+    {ok, Connection} = amqp_connection:start(AmqpParams),
+    {ok, Channel} = amqp_connection:open_channel(Connection),
+
+    Exchange = #'exchange.declare'{exchange = <<"OrderBookTop">>},
+    #'exchange.declare_ok'{} = amqp_channel:call(Channel, Exchange),
+
+    Queue = #'queue.declare'{queue = <<"poloniex">>},
+    #'queue.declare_ok'{} = amqp_channel:call(Channel, Queue),
+
+    Subscribe = #'basic.consume'{queue = <<"poloniex">>},
+    #'basic.consume_ok'{consumer_tag = Tag} = amqp_channel:call(Channel, Subscribe),
+
+    
+    {ok, #state{
+           connection = Connection,
+           channel = Channel,
+           consumer_tag = Tag
+           }}.
 
 %%--------------------------------------------------------------------
 %% @private
@@ -106,23 +140,28 @@ handle_call(_Request, _From, State) ->
 %%                                  {stop, Reason, State}
 %% @end
 %%--------------------------------------------------------------------
-handle_cast({subscribe, Pid}, 
-            #state{
-               best_price_subscribers = Subcsribers
-            } = State) ->
-    {noreply, State#state{best_price_subscribers = [Pid | Subcsribers]}};
 handle_cast({best, Direction, Pair, Price}, 
             #state{
-               best_price_subscribers = Subcsribers
+               connection = Connection,
+               channel = Channel
             } = State) ->
-    lists:foreach(fun(Pid) ->
-                          Pid ! #depth{
-                                   direction = Direction,
-                                   price = Price,
-                                   pair = bin_to_pair(Pair)
-                                  }
-                  end, 
-                  Subcsribers),
+    Data = #{
+      <<"exchange">> => poloniex,
+      <<"pair">> => Pair,
+      <<"direction">> => Direction,
+      <<"price">> => Price
+      %<<"amount">> => 
+      },
+    JSON = jsx:encode(Data),
+
+    Publish = #'basic.publish'{
+                 exchange = <<"OrderBookTop">>,
+                 routing_key = Pair
+                },
+    %Props = #'P_basic'{delivery_mode = 2}, %% persistent message
+    Msg = #amqp_msg{payload = JSON},
+    amqp_channel:cast(Channel, Publish, Msg),
+
     {noreply, State};
 handle_cast(_Msg, State) ->
     lager:warning("Wrong message: ~p in module ~p state ~p", [_Msg, ?MODULE, State]),
@@ -138,7 +177,36 @@ handle_cast(_Msg, State) ->
 %%                                   {stop, Reason, State}
 %% @end
 %%--------------------------------------------------------------------
+handle_info(#'basic.consume_ok'{}, State) ->
+    {noreply, State};
+handle_info(#'basic.cancel_ok'{}, State) ->
+    {noreply, State};
+handle_info({#'basic.deliver'{delivery_tag = Tag}, 
+             #amqp_msg{
+                props = #'P_basic'{
+                           correlation_id = CID,
+                           reply_to = Reply
+                          },
+
+                payload = Data
+               }
+            },
+            #state{
+               channel = Channel
+              } = State) ->
+    lager:info("AMQP reply ~p cid ~p message: ~p", [Reply, CID, Data]),
+
+    Result = apply_api_method(jsx:decode(Data, [return_maps])),
+
+    Response = #'basic.publish'{routing_key = Reply},
+    Props = #'P_basic'{correlation_id = CID},
+    Msg = #amqp_msg{props = Props, payload = jsx:encode(Result)},
+    amqp_channel:cast(Channel, Response, Msg),
+
+    amqp_channel:cast(Channel, #'basic.ack'{delivery_tag = Tag}),
+    {noreply, State};
 handle_info(_Info, State) ->
+    lager:warning("Wrong message: ~p in module ~p state ~p", [_Info, ?MODULE, State]),
     {noreply, State}.
 
 %%--------------------------------------------------------------------
@@ -174,6 +242,20 @@ bin_to_pair(<<Quote:3/bytes, "_", Base:3/bytes>>) ->
        base = Base,
        quote = Quote
       }.
-
-
+apply_api_method(#{<<"action">> := <<"buy">>,
+                  <<"price">> := Price,
+                  <<"amount">> := Amount,
+                  <<"pair">> := Pair
+                  }) ->
+    poloniex_http_private:buy(Pair, Price, Amount);
+apply_api_method(#{<<"action">> := <<"sell">>,
+                  <<"price">> := Price,
+                  <<"amount">> := Amount,
+                  <<"pair">> := Pair
+                  }) ->
+    poloniex_http_private:sell(Pair, Price, Amount);
+apply_api_method(#{<<"action">> := <<"balances">>}) ->
+    poloniex_http_private:balances();
+apply_api_method(Data) ->
+    lager:warning("Unknown method: ~p in module ~p", [Data, ?MODULE]).
 
