@@ -1,3 +1,5 @@
+-include_lib("amqp_client/include/amqp_client.hrl").
+
 -type symbol() :: binary().
 
 -record(pair, {

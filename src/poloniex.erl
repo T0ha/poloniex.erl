@@ -96,8 +96,12 @@ init([]) ->
     {ok, Connection} = amqp_connection:start(AmqpParams),
     {ok, Channel} = amqp_connection:open_channel(Connection),
 
-    Exchange = #'exchange.declare'{exchange = <<"OrderBookTop">>},
-    #'exchange.declare_ok'{} = amqp_channel:call(Channel, Exchange),
+    OrderExchange = #'exchange.declare'{
+                       exchange = <<"OrderBookTop">>,
+                       type = <<"topic">>
+                       %nowait = true
+                      },
+    #'exchange.declare_ok'{} = amqp_channel:call(Channel, OrderExchange),
 
     Queue = #'queue.declare'{queue = <<"poloniex">>},
     #'queue.declare_ok'{} = amqp_channel:call(Channel, Queue),
@@ -158,7 +162,6 @@ handle_cast({best, Direction, Pair, Price},
                  exchange = <<"OrderBookTop">>,
                  routing_key = Pair
                 },
-    %Props = #'P_basic'{delivery_mode = 2}, %% persistent message
     Msg = #amqp_msg{payload = JSON},
     amqp_channel:cast(Channel, Publish, Msg),
 
@@ -242,6 +245,11 @@ bin_to_pair(<<Quote:3/bytes, "_", Base:3/bytes>>) ->
        base = Base,
        quote = Quote
       }.
+apply_api_method(#{<<"action">> := <<"subscribe">>,
+                  <<"pair">> := Pair
+                  }) ->
+    poloniex_pair_sup:add_pair(Pair),
+    poloniex_ws:subscribe(Pair);
 apply_api_method(#{<<"action">> := <<"buy">>,
                   <<"price">> := Price,
                   <<"amount">> := Amount,
