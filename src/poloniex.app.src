@@ -9,7 +9,7 @@
     cowlib,
     lager,
     gun,
-    amqp_client
+    cryptoring_amqp
    ]},
   {env,[]},
   {modules, []},
