@@ -234,7 +234,7 @@ handle_depth_command({PCode, [<<"o">>, 0, Price, Volume]},
         BestPrice ->
             {noreply, State};
         NewBest ->
-            poloniex:best_ask_updated(Pair, NewBest),
+            cryptoring_amqp_exchange:publish_order_top(ask, Pair, NewBest, Volume),
             {noreply, State#state{best_ask = NewBest}}
     end;
 handle_depth_command({PCode, [<<"o">>, 1, Price, Volume]},
@@ -250,7 +250,7 @@ handle_depth_command({PCode, [<<"o">>, 1, Price, Volume]},
         BestPrice ->
             {noreply, State};
         NewBest ->
-            poloniex:best_bid_updated(Pair, NewBest),
+            cryptoring_amqp_exchange:publish_order_top(bid, Pair, NewBest, Volume),
             {noreply, State#state{best_bid = NewBest}}
     end;
 handle_depth_command({_PCode, [<<"t">>, _Id, 0, PriceB, VolumeB, _Timestamp]},
