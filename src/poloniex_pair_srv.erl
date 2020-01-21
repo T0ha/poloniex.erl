@@ -234,7 +234,8 @@ handle_depth_command({PCode, [<<"o">>, 0, Price, Volume]},
         BestPrice ->
             {noreply, State};
         NewBest ->
-            cryptoring_amqp_exchange:publish_order_top(ask, Pair, NewBest, Volume),
+            Vol = ets:lookup_element(AsksEts, NewBest, 2),
+            cryptoring_amqp_exchange:publish_order_top(ask, Pair, NewBest, Vol),
             {noreply, State#state{best_ask = NewBest}}
     end;
 handle_depth_command({PCode, [<<"o">>, 1, Price, Volume]},
@@ -250,7 +251,8 @@ handle_depth_command({PCode, [<<"o">>, 1, Price, Volume]},
         BestPrice ->
             {noreply, State};
         NewBest ->
-            cryptoring_amqp_exchange:publish_order_top(bid, Pair, NewBest, Volume),
+            Vol = ets:lookup_element(BidsEts, NewBest, 2),
+            cryptoring_amqp_exchange:publish_order_top(bid, Pair, NewBest, Vol),
             {noreply, State#state{best_bid = NewBest}}
     end;
 handle_depth_command({_PCode, [<<"t">>, _Id, 0, PriceB, VolumeB, _Timestamp]},
