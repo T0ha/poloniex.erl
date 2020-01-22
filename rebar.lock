@@ -9,7 +9,7 @@
   3},
  {<<"cryptoring_amqp">>,
   {git,"git@github.com:T0ha/cryptoring_amqp.git",
-       {ref,"f32abc6daa5a7c3635184007a1ae1b4dc646b0bc"}},
+       {ref,"a5cc347200bd4c81554956c594eb3f210233f9a2"}},
   0},
  {<<"goldrush">>,
   {git,"https://github.com/basho/goldrush.git",

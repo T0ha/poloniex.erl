@@ -51,8 +51,7 @@ sell(Pair, Price, Amount) ->
     poloniex_http_private:sell(Pair, Price, Amount).
 
 balances() ->
-    Balancies = poloniex_http_private:balances(),
-    maps:filter(fun(_K, #{<<"btcValue">> := V}) -> V == 0.0 end, Balancies).
+    poloniex_http_private:balances().
 
 subscribe_pair(Pair) ->
     poloniex_pair_sup:add_pair(Pair),
