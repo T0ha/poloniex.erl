@@ -51,7 +51,15 @@ sell(Pair, Price, Amount) ->
     poloniex_http_private:sell(Pair, Price, Amount).
 
 balances() ->
-    poloniex_http_private:balances().
+    Balancies = poloniex_http_private:balances(),
+    lists:foldl(fun({Coin, Data}, A) ->
+                        A#{Coin => lists:map(fun({K, V}) ->
+                                                     {K, binary_to_float(V)}
+                                             end,
+                                             Data)}
+                end,
+                #{},
+                Balancies).
 
 subscribe_pair(Pair) ->
     poloniex_pair_sup:add_pair(Pair),
