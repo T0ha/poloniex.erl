@@ -5,6 +5,11 @@
    {secret, "POLONIEX_SECRET"}
   ]
  },
+ {amqp_client, [
+                {username, <<"cryptoring">>},
+                {password, <<"cryptoring">>},
+                {virtual_host, <<"cryptoring">>}
+               ]},
  {lager,
   [
    {log_root, "log"},
