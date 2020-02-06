@@ -51,14 +51,19 @@ sell(Pair, Price, Amount) ->
     poloniex_http_private:sell(Pair, Price, Amount).
 
 balances() ->
-    Balancies = poloniex_http_private:balances(),
-    maps:map(fun(_Coin, Data) ->
-                     maps:map(fun(_K, V) ->
-                                      binary_to_float(V)
-                              end,
-                              Data)
-             end,
-             Balancies).
+    case poloniex_http_private:balances() of
+        #{<<"error">> := E} = Error ->
+            lager:warning("Error getting balancies: ~s", [E]),
+            Error;
+        Balancies ->
+            maps:map(fun(_Coin, Data) ->
+                             maps:map(fun(_K, V) ->
+                                              binary_to_float(V)
+                                      end,
+                                      Data)
+                     end,
+                     Balancies)
+    end.
 
 subscribe_pair(Pair) ->
     poloniex_pair_sup:add_pair(Pair),
