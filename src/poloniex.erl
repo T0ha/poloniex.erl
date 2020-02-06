@@ -53,8 +53,8 @@ sell(Pair, Price, Amount) ->
 balances() ->
     case poloniex_http_private:balances() of
         #{<<"error">> := E} = Error ->
-            lager:warning("Error getting balancies: ~s", [E]),
-            Error;
+            lager:warning("Error getting balancies: ~p", [E]),
+            #{<<"error">> => iolist_to_binary(io_lib:format("~p", [E]))};
         Balancies ->
             maps:map(fun(_Coin, Data) ->
                              maps:map(fun(_K, V) ->
