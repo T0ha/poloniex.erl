@@ -97,13 +97,17 @@ handle_call(_Request, _From, State) ->
 %%                                  {stop, Reason, State}
 %% @end
 %%--------------------------------------------------------------------
-handle_cast({subscribe, Pair}, #connection{connection = Connection} = State) ->
+handle_cast({subscribe, Pair}, 
+            #connection{
+               connection = Connection,
+               subscriptions = Subscribtions
+              } = State) ->
     Subscribe = #{
       command => <<"subscribe">>,
       channel => Pair
      },
     gun:ws_send(Connection, {text, jsx:encode(Subscribe)}),
-    {noreply, State};
+    {noreply, State#connection{subscriptions = [Pair | Subscribtions]}};
 handle_cast(_Msg, State) ->
     {noreply, State}.
 
@@ -122,8 +126,12 @@ handle_info({gun_up, Connection, http}, #connection{connection = Connection} = S
     Ref = gun:ws_upgrade(Connection, "/"),
     {noreply, State#connection{ref = Ref}, ?HEATBREAT_TIMEOUT};
 handle_info({gun_upgrade, Connection, Ref, _Protocols, _Headers},
-            #connection{connection = Connection} = State) ->
+            #connection{
+               connection = Connection,
+               subscriptions = Subscribtions
+              } = State) ->
     lager:info("WS connected ~p", [Ref]),
+    lists:foreach(fun subscribe/1, Subscribtions),
     {noreply, State#connection{ref = Ref}, ?HEATBREAT_TIMEOUT};
 handle_info({gun_ws, Connection, Ref, {text, <<"[1010]">>}},
             #connection{connection = Connection, ref = Ref} = State) ->
