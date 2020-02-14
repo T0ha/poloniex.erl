@@ -45,16 +45,20 @@ start_link() ->
 %%% cryptoring_amqp_exchange callbacks
 %%%===================================================================
 buy(Pair, Price, Amount) ->
-    poloniex_http_private:buy(Pair, Price, Amount).
+    Resp = poloniex_http_private:buy(Pair, Price, Amount),
+    cryptoring_amqp_log:log(<<"order">>, Resp).
 
 sell(Pair, Price, Amount) ->
-    poloniex_http_private:sell(Pair, Price, Amount).
+    Resp = poloniex_http_private:sell(Pair, Price, Amount),
+    cryptoring_amqp_log:log(<<"order">>, Resp).
 
 balances() ->
     case poloniex_http_private:balances() of
-        #{<<"error">> := E} = Error ->
+        #{<<"error">> := E} ->
             lager:warning("Error getting balancies: ~p", [E]),
-            #{<<"error">> => iolist_to_binary(io_lib:format("~p", [E]))};
+            Resp = #{<<"error">> => iolist_to_binary(io_lib:format("~p", [E]))},
+            cryptoring_amqp_log:log(<<"error">>, Resp),
+            Resp;
         Balancies ->
             maps:map(fun(_Coin, Data) ->
                              maps:map(fun(_K, V) ->
