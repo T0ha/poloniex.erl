@@ -209,6 +209,8 @@ handle_depth_command({PCode, [<<"i">>, [{<<"currencyPair">>, Pair}, {<<"orderBoo
     Bids = [ {binary_to_float(P), binary_to_float(V)} || {P, V} <- Bid],
     Asks = [ {binary_to_float(P), binary_to_float(V)} || {P, V} <- Ask],
     lager:debug("Max bid: ~p Min ask: ~p", [hd(Bids), hd(Asks)]),
+    ets:delete_all_objects(AsksEts),
+    ets:delete_all_objects(BidsEts),
     ets:insert(AsksEts, Asks),
     ets:insert(BidsEts, Bids),
     {noreply, State#state{
