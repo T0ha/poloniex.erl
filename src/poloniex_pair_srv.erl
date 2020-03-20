@@ -257,13 +257,15 @@ handle_depth_command({PCode, [<<"o">>, 1, Price, Volume]},
             cryptoring_amqp_exchange:publish_order_top(bid, Pair, NewBest, Vol),
             {noreply, State#state{best_bid = NewBest}}
     end;
-handle_depth_command({_PCode, [<<"t">>, _Id, 0, PriceB, VolumeB, _Timestamp]},
+handle_depth_command({_PCode, [<<"t">>, Id, 0, PriceB, VolumeB, Timestamp]},
                      #state{pair= Pair} = State) ->
     lager:info("Sell transaction for ~p price ~p volume ~p", [Pair, PriceB, VolumeB]),
+    cryptoring_amqp_exchange:publish_trade(sell, Pair, binary_to_float(PriceB), binary_to_float(VolumeB), Timestamp, Id),
     {noreply, State};
-handle_depth_command({_PCode, [<<"t">>, _Id, 1, PriceB, VolumeB, _Timestamp]},
+handle_depth_command({_PCode, [<<"t">>, Id, 1, PriceB, VolumeB, Timestamp]},
                      #state{pair= Pair} = State) ->
     lager:info("Buy transaction for ~p price ~p volume ~p", [Pair, PriceB, VolumeB]),
+    cryptoring_amqp_exchange:publish_trade(buy, Pair, binary_to_float(PriceB), binary_to_float(VolumeB), Timestamp, Id),
     {noreply, State};
 handle_depth_command({PCode, _},
                      #state{
