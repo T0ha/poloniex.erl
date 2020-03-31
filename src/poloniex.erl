@@ -16,11 +16,11 @@
         ]).
 
 %% cryptoring_amqp_exchange callbacks
--export([
-         buy/3,
-         sell/3,
-         balances/0,
-         subscribe_pair/1
+-export([buy/3
+        ,sell/3
+        ,balances/0
+        ,subscribe_pair/1
+        ,open_orders/0
         ]).
 
 -define(SERVER, ?MODULE).
@@ -56,7 +56,10 @@ balances() ->
     case poloniex_http_private:balances() of
         #{<<"error">> := E} ->
             lager:warning("Error getting balancies: ~p", [E]),
-            Resp = #{<<"error">> => iolist_to_binary(io_lib:format("~p", [E]))},
+            Resp = #{
+              <<"error">> => iolist_to_binary(io_lib:format("~p", [E])),
+              <<"method">> => <<"balancies">>
+             },
             cryptoring_amqp_log:log(<<"error">>, Resp),
             Resp;
         Balancies ->
@@ -72,6 +75,39 @@ balances() ->
 subscribe_pair(Pair) ->
     poloniex_pair_sup:add_pair(Pair),
     poloniex_ws:subscribe(Pair).
+
+open_orders() ->
+    case poloniex_http_private:open_orders() of
+        #{<<"error">> := E} ->
+            lager:warning("Error getting open_orders: ~p", [E]),
+            Resp = #{
+              <<"error">> => iolist_to_binary(io_lib:format("~p", [E])),
+              <<"method">> => <<"open_orders">>
+             },
+            cryptoring_amqp_log:log(<<"error">>, Resp),
+            Resp;
+        Orders ->
+            maps:fold(fun(_Pair, [], Acc) -> Acc;
+                         (Pair, Ords, Acc) ->
+                              [#{<<"pair">> => Pair
+                                ,<<"direction">> => Direction
+                                ,<<"price">> => binary_to_float(Price)
+                                ,<<"amount">> => binary_to_float(Amount)
+                                ,<<"total">> => binary_to_float(Total)
+                                ,<<"id">> => Id
+                                ,<<"timestamp">> => TS
+                                } || #{<<"type">> := Direction
+                                      ,<<"rate">> := Price
+                                      ,<<"amount">> := Amount
+                                      ,<<"orderNumber">> := Id
+                                      ,<<"total">> := Total
+                                      ,<<"date">> := TS
+                                      } <- Ords] ++ Acc
+                      end,
+                      [],
+                      Orders)
+    end.
+            
 
                         
 
