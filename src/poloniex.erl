@@ -95,7 +95,7 @@ open_orders() ->
                                 ,<<"amount">> => binary_to_float(Amount)
                                 ,<<"total">> => binary_to_float(Total)
                                 ,<<"id">> => Id
-                                ,<<"timestamp">> => TS
+                                ,<<"timestamp">> => datetime_to_ts(TS)
                                 } || #{<<"type">> := Direction
                                       ,<<"rate">> := Price
                                       ,<<"amount">> := Amount
@@ -108,6 +108,13 @@ open_orders() ->
                       Orders)
     end.
             
-
-                        
-
+datetime_to_ts(<<Y:4/bytes, "-", M:2/bytes, "-", D:2/bytes, " ", H:2/bytes, ":",MM:2/bytes,":",SS:2/bytes>>) ->
+    Secs = calendar:datetime_to_gregorian_seconds({{binary_to_integer(Y)
+                                     ,binary_to_integer(M)
+                                     ,binary_to_integer(D)
+                                     }, 
+                                     {binary_to_integer(H)
+                                     ,binary_to_integer(MM)
+                                     ,binary_to_integer(SS)
+                                     }}) - calendar:datetime_to_gregorian_seconds({{1970, 1, 1}, {0, 0, 0}}),
+    Secs * 1000.
