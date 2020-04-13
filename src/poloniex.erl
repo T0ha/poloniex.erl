@@ -63,11 +63,12 @@ balances() ->
             cryptoring_amqp_log:log(<<"error">>, Resp),
             Resp;
         Balancies ->
-            maps:map(fun(_Coin, Data) ->
+            maps:map(fun(_Coin, Data) when is_map(Data) ->
                              maps:map(fun(_K, V) ->
                                               binary_to_float(V)
                                       end,
-                                      Data)
+                                      Data);
+                        (_K, V) -> V
                      end,
                      Balancies)
     end.
@@ -88,7 +89,7 @@ open_orders() ->
             Resp;
         Orders ->
             maps:fold(fun(_Pair, [], Acc) -> Acc;
-                         (Pair, Ords, Acc) ->
+                         (Pair, Ords, Acc) when is_list(Ords) ->
                               [#{<<"pair">> => Pair
                                 ,<<"direction">> => Direction
                                 ,<<"price">> => binary_to_float(Price)
@@ -102,7 +103,9 @@ open_orders() ->
                                       ,<<"orderNumber">> := Id
                                       ,<<"total">> := Total
                                       ,<<"date">> := TS
-                                      } <- Ords] ++ Acc
+                                      } <- Ords] ++ Acc;
+
+                        (_K, _V, Acc) -> Acc
                       end,
                       [],
                       Orders)
