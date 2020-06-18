@@ -21,6 +21,8 @@
         ,balances/0
         ,subscribe_pair/1
         ,open_orders/0
+        ,asks/2
+        ,bids/2
         ]).
 
 -define(SERVER, ?MODULE).
@@ -110,7 +112,29 @@ open_orders() ->
                       [],
                       Orders)
     end.
+
+asks(Pair, Limit) ->
+    try poloniex_pair_srv:asks(Pair, Limit) of
+        Result ->
+            [#{<<"price">> => Price
+               ,<<"amount">> => Amount
+              } || {Price, Amount} <- Result]
+    catch
+        _:_ -> 
+            []
+    end.
             
+bids(Pair, Limit) ->
+    try poloniex_pair_srv:bids(Pair, Limit) of
+        Result ->
+            [#{<<"price">> => Price
+               ,<<"amount">> => Amount
+              } || {Price, Amount} <- Result]
+    catch
+        _:_ -> 
+            []
+    end.
+
 datetime_to_ts(<<Y:4/bytes, "-", M:2/bytes, "-", D:2/bytes, " ", H:2/bytes, ":",MM:2/bytes,":",SS:2/bytes>>) ->
     Secs = calendar:datetime_to_gregorian_seconds({{binary_to_integer(Y)
                                      ,binary_to_integer(M)
