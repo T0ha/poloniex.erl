@@ -117,7 +117,7 @@ asks(Pair, Limit) ->
     try poloniex_pair_srv:asks(Pair, Limit) of
         Result ->
             [#{<<"price">> => Price
-               ,<<"amount">> => Amount
+              ,<<"amount">> => Amount
               } || {Price, Amount} <- Result]
     catch
         _:_ -> 
@@ -128,7 +128,7 @@ bids(Pair, Limit) ->
     try poloniex_pair_srv:bids(Pair, Limit) of
         Result ->
             [#{<<"price">> => Price
-               ,<<"amount">> => Amount
+              ,<<"amount">> => Amount
               } || {Price, Amount} <- Result]
     catch
         _:_ -> 
