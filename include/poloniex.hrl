@@ -19,6 +19,7 @@
 -define(BALANCES, "returnCompleteBalances").
 -define(OPEN_ORDERS, "returnOpenOrders").
 -define(ORDER_STATUS, "returnOrderStatus").
+-define(CANCEL_ORDER, "cancelOrder").
 -define(BUY, "buy").
 -define(SELL, "sell").
 

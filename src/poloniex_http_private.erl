@@ -19,7 +19,8 @@
          open_orders/1,
          order_status/1,
          buy/3,
-         sell/3
+         sell/3,
+         cancel_order/1
         ]).
 
 %% gen_server callbacks
@@ -58,6 +59,9 @@ open_orders(Pair) ->
 
 order_status(OrderId) ->
     post(?ORDER_STATUS, [{"orderNumber", OrderId}]).
+
+cancel_order(OrderId) ->
+    post(?CANCEL_ORDER, [{"orderNumber", OrderId}]).
 
 buy(Pair, Price, Amount) when is_float(Price) ->
     buy(Pair, float_to_bin(Price), Amount);
