@@ -24,15 +24,15 @@
 -define(SELL, "sell").
 
 
--record(connection, {
-          connection :: pid() | undefined,
-          headers = [] :: gun:req_headers(),
-          key = <<>> :: binary(),
-          secret = <<>> :: binary(),
-          from :: pid() | undefined,
-          ref :: reference() | undefined,
-          subscriptions = sets:new() :: sets:set(binary())
-         }).
+-record(connection, {connection :: pid() | undefined
+                     ,connection_mon :: reference() | undefined
+                     ,headers = [] :: gun:req_headers()
+                     ,key = <<>> :: binary()
+                     ,secret = <<>> :: binary()
+                     ,from :: pid() | undefined
+                     ,ref :: reference() | undefined
+                     ,subscriptions = sets:new() :: sets:set(binary())
+                    }).
 
 -record(pair, {
           code :: pos_integer() | undefined,

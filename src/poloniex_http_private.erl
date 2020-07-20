@@ -114,6 +114,7 @@ post(Method, Args) ->
 %%--------------------------------------------------------------------
 init([]) ->
     {ok, Connection} = connect(),
+    CRef = monitor(process, Connection),
     Key = application:get_env(poloniex, key, <<>>),
     Secret = application:get_env(poloniex, secret, <<>>),
 
@@ -122,6 +123,7 @@ init([]) ->
     {ok, 
      #connection{
             connection = Connection,
+            connection_mon = CRef,
             key = Key,
             secret = Secret,
             headers = [
@@ -183,20 +185,30 @@ handle_cast(_Msg, State) ->
 %%                                   {stop, Reason, State}
 %% @end
 %%--------------------------------------------------------------------
+handle_info({'DOWN', CRef, process, Connection, _Info},
+            #connection{connection = Connection
+                        ,connection_mon = CRef
+                       } = State) ->
+    lager:warning("Connection process for poloniex_http_private was killed, reconnecting"),
+    demonitor(CRef),
+    {ok, NewConnection} = connect(),
+    {noreply, State#connection{connection = NewConnection
+                               ,connection_mon = monitor(process, NewConnection)
+                              }};
 handle_info({gun_up, Connection, http}, #connection{connection = Connection} = State) ->
     lager:info("HTTP connected ~p", [Connection]),
-    {noreply, State};
+    {noreply, State#connection{connection = Connection}};
 handle_info({gun_down, Connection, http, Reason, _KilledStreams},
             #connection{connection = Connection} = State) ->
-    lager:info("Publick HTTP ~p disconnected with reason ~p, reconnecting", [Connection, Reason]),
+    lager:info("Private HTTP ~p disconnected with reason ~p, reconnecting", [Connection, Reason]),
     %{ok, NewConnection} = connect(),
     {noreply, State#connection{connection = Connection}};
 handle_info({gun_down, Connection, http, Reason, _KilledStreams, _UnprocessedStreams},
             #connection{connection = Connection} = State) ->
-    lager:info("Publick HTTP ~p disconnected with reason ~p, reconnecting", [Connection, Reason]),
+    lager:info("Private HTTP ~p disconnected with reason ~p, reconnecting", [Connection, Reason]),
     %{ok, NewConnection} = connect(),
     {noreply, State#connection{connection = Connection}};
-handle_info({gun_responce, Connection, Ref, fin, Status, Headers},
+handle_info({gun_responce, Connection, Ref, fin, _Status, _Headers},
             #connection{
                connection = Connection,
                ref = Ref,
@@ -205,7 +217,7 @@ handle_info({gun_responce, Connection, Ref, fin, Status, Headers},
     lager:info("Empty HTTP responce recieved for ~p", [Ref]),
     gen_server:reply(Pid, <<>>),
     {noreply, State#connection{from = undefined, ref = undefined}};
-handle_info({gun_responce, Connection, Ref, nofin, Status, Headers},
+handle_info({gun_responce, Connection, Ref, nofin, _Status, _Headers},
             #connection{
                connection = Connection,
                ref = Ref,

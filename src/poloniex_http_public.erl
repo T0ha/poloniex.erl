@@ -114,9 +114,9 @@ init([]) ->
     {ok, Connection} = connect(),
     lager:info("Starting ~p", [?MODULE]),
     {ok, 
-     #connection{
-            connection = Connection
-           }}.
+     #connection{connection = Connection
+                 ,connection_mon = monitor(process, Connection)
+                }}.
 
 %%--------------------------------------------------------------------
 %% @private
@@ -165,6 +165,16 @@ handle_cast(_Msg, State) ->
 %%                                   {stop, Reason, State}
 %% @end
 %%--------------------------------------------------------------------
+handle_info({'DOWN', CRef, process, Connection, _Info},
+            #connection{connection = Connection
+                        ,connection_mon = CRef
+                       } = State) ->
+    lager:warning("Connection process for poloniex_http_public was killed, reconnecting"),
+    demonitor(CRef),
+    {ok, NewConnection} = connect(),
+    {noreply, State#connection{connection = NewConnection
+                               ,connection_mon = monitor(process, NewConnection)
+                              }};
 handle_info({gun_up, Connection, http}, #connection{connection = Connection} = State) ->
     lager:info("HTTP connected ~p", [Connection]),
     {noreply, State};
