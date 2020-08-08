@@ -15,7 +15,9 @@
 %%====================================================================
 
 start(_StartType, _StartArgs) ->
-    poloniex_sup:start_link().
+    Ret = poloniex_sup:start_link(),
+    poloniex:sync(),
+    Ret.
 
 %%--------------------------------------------------------------------
 stop(_State) ->

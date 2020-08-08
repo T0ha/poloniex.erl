@@ -24,6 +24,7 @@
         ,asks/2
         ,bids/2
         ,cancel_order/2
+        ,sync/0
         ]).
 
 -define(SERVER, ?MODULE).
@@ -139,6 +140,10 @@ bids(Pair, Limit) ->
 cancel_order(_Pair, OrderId) ->
     Resp = poloniex_http_private:cancel_order(OrderId),
     cryptoring_amqp_log:log(<<"cancel_order">>, Resp#{<<"origOrderId">> => OrderId}).
+
+sync() ->
+    #{<<"pairs">> := Pairs} = cryptoring_couchdb:fetch_config_doc("cryptoring"),
+    lists:foreach(fun subscribe_pair/1, Pairs).
 
 datetime_to_ts(<<Y:4/bytes, "-", M:2/bytes, "-", D:2/bytes, " ", H:2/bytes, ":",MM:2/bytes,":",SS:2/bytes>>) ->
     Secs = calendar:datetime_to_gregorian_seconds({{binary_to_integer(Y)
