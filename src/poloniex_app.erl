@@ -16,7 +16,7 @@
 
 start(_StartType, _StartArgs) ->
     Ret = poloniex_sup:start_link(),
-    poloniex:sync(),
+    cryptoring_amqp_exchange:sync(poloniex),
     Ret.
 
 %%--------------------------------------------------------------------
