@@ -1,0 +1,35 @@
+[
+ {poloniex,
+  [
+   {key, "${API_KEY}"},
+   {secret, "${API_SECRET}"}
+  ]
+ },
+ {amqp_client, [{host, "${RABBIT_HOST}"}
+                ,{port, 5673}
+                ,{username, <<"${RABBIT_HOST}">>}
+                ,{password, <<"${RABBIT_HOST}">>}
+                ,{virtual_host, <<"${RABBIT_HOST}">>}
+                %,{ssl, [{verify, verify_none}
+                %        ,{cacertfile, "./ssl/ca_certificate.pem"}
+                %        ,{certfile, "./ssl/client_certificate.pem"}
+                %        ,{keyfile, "./ssl/client_key.pem"}
+                %       ]}
+               ]},
+{cryptoring_amqp,
+    [
+    {couchdb, [
+        {url, <<"${COUCHDB_URL}">>},
+        {login, <<"${COUCHDB_LOGIN">>},
+        {password, <<"${COUCHDB_PASSWORD">>}
+    ]}
+    ]},
+{lager,
+  [
+   {log_root, "log"},
+   {handlers, [
+               {lager_console_backend, debug}
+              ]}
+  ]}
+ ].
+
