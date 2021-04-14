@@ -11,7 +11,9 @@ jobs:
       - name: Work directory
         run: pwd
       - name: ls
-        run: ls
+        run: |
+          ls
+
       - name: Building image
         shell: bash
         run: docker build -t poloniex .
