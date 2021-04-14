@@ -21,6 +21,6 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
           registry: docker.pkg.github.com
-          repository: T0ha/poloniex.erl/cryptoring-poloniex
+          repository: t0ha/poloniex.erl/cryptoring-poloniex
           tag_with_ref: true
 
