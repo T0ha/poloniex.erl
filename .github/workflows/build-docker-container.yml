@@ -3,16 +3,19 @@ on:
   push:
     branches:
       - master
+defaults:
+  run:
+    shell: bash
+    
 jobs:
   build_docker_image:
     name: Build Image
     runs-on: ubuntu-18.04
     steps:
-      - name: Work directory
-        run: pwd
-      - name: ls
-        run: |
-          ls
+      - name: Checkout repo
+        uses: actions/checkout@v2
+
+      - run: ls
 
       - name: Building image
         shell: bash
