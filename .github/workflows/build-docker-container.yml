@@ -8,6 +8,10 @@ jobs:
     name: Build Image
     runs-on: ubuntu-18.04
     steps:
+      - name: Work directory
+        run: pwd
+      - name: ls
+        run: ls
       - name: Building image
         shell: bash
         run: docker build -t poloniex .
