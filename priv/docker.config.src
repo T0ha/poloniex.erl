@@ -5,11 +5,11 @@
    {secret, "${API_SECRET}"}
   ]
  },
- {amqp_client, [{host, "${RABBIT_HOST}"}
-                ,{port, 5673}
-                ,{username, <<"${RABBIT_HOST}">>}
-                ,{password, <<"${RABBIT_HOST}">>}
-                ,{virtual_host, <<"${RABBIT_HOST}">>}
+ {amqp_client, [{host, "${RABBITMQ_SERVICE_HOST}"}
+                ,{port, ${RABBITMQ_SERVICE_PORT}}
+                ,{username, <<"${RABBIT_USER}">>}
+                ,{password, <<"${RABBIT_PASSWORD}">>}
+                ,{virtual_host, <<"${RABBIT_VHOST}">>}
                 %,{ssl, [{verify, verify_none}
                 %        ,{cacertfile, "./ssl/ca_certificate.pem"}
                 %        ,{certfile, "./ssl/client_certificate.pem"}
