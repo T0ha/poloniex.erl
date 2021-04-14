@@ -1,0 +1,14 @@
+name: Build Docker Image
+on:
+  push:
+    branches:
+      - master
+jobs:
+  build_docker_image:
+    name: Build Image
+    runs-on: ubuntu-18.04
+    steps:
+      - name: Building image
+        shell: bash
+        run: docker build -t poloniex .
+
