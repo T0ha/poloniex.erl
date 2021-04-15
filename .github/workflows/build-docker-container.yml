@@ -15,6 +15,11 @@ jobs:
       - name: Checkout repo
         uses: actions/checkout@v2
 
+      - name: SSH Agent init
+        uses: webfactory/ssh-agent@v0.5.2
+        with:
+          ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
+
       - name: Building and publishing an image
         uses: docker/build-push-action@v1
         with:
