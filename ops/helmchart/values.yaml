@@ -5,12 +5,14 @@
 replicaCount: 1
 
 image:
-  repository: war1and/images
+  repository: docker.pkg.github.com/t0ha/poloniex.erl/cryptoring-poloniex
   pullPolicy: Always
   # Overrides the image tag whose default is the chart appVersion.
-  tag: "cryptoring-poloniex"
+  tag: "latest"
 
-imagePullSecrets: []
+imagePullSecrets: 
+  - name: github 
+
 nameOverride: ""
 fullnameOverride: ""
 
