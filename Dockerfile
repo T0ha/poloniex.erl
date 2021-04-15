@@ -7,9 +7,9 @@ RUN rebar3 as docker do compile, release
 FROM alpine:latest
 WORKDIR /root
 RUN apk add ncurses
-RUN mkdir ssl
-COPY --from=builder /root/poloniex/priv/ssl/ca_certificate.pem ./ssl
-COPY --from=builder /root/poloniex/priv/ssl/client_certificate.pem ./ssl
-COPY --from=builder /root/poloniex/priv/ssl/client_key.pem ./ssl
+#RUN mkdir ssl
+#COPY --from=builder /root/poloniex/priv/ssl/ca_certificate.pem ./ssl
+#COPY --from=builder /root/poloniex/priv/ssl/client_certificate.pem ./ssl
+#COPY --from=builder /root/poloniex/priv/ssl/client_key.pem ./ssl
 COPY --from=builder /root/poloniex/_build/docker/rel/poloniex .
 CMD ./bin/poloniex console
