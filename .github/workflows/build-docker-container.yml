@@ -34,7 +34,7 @@ jobs:
 
   deploy_to_kubernetes:
     name: Deploy to Kubernetes
-    run-on: ubuntu-18.04
+    runs-on: ubuntu-18.04
     env:
       RABBIT_USER: cryptoring
       RABBIT_VHOST: "/"
@@ -51,10 +51,10 @@ jobs:
         with:
           args: |
             helm upgrade --install -n cryptoring poloniex ./helmchart \
-            --set RABBIT_USER=${{ RABBIT_USER }} \
+            --set RABBIT_USER=${{ env.RABBIT_USER }} \
             --set RABBIT_PASSWORD=${{ secrets.RABBIT_PASSWORD }} \
-            --set RABBIT_VHOST=${{ RABBIT_VHOST }} \
-            --set COUCHDB_URL=${{ COUCHDB_URL }} \
+            --set RABBIT_VHOST=${{ env.RABBIT_VHOST }} \
+            --set COUCHDB_URL=${{ env.COUCHDB_URL }} \
             --set COUCHDB_LOGIN=${{ secrets.COUCHDB_LOGIN }} \
             --set COUCHDB_PASSWORD={{ secrets.COUCHDB_PASSWORD }} \
             --set API_KEY={{ secrets.API_KEY }} \
