@@ -20,8 +20,8 @@
     [
     {couchdb, [
         {url, <<"${COUCHDB_URL}">>},
-        {login, <<"${COUCHDB_LOGIN">>},
-        {password, <<"${COUCHDB_PASSWORD">>}
+        {login, <<"${COUCHDB_LOGIN}">>},
+        {password, <<"${COUCHDB_PASSWORD}">>}
     ]}
     ]},
 {lager,
