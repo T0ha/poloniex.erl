@@ -32,18 +32,31 @@ jobs:
           repository: t0ha/cryptoring-poloniex
           tag_with_ref: true
 
-          #deploy_to_kubernetes:
-          #  name: Deploy to Kubernetes
-          #  run-on: ubuntu-18.04
-          #  steps:
-          #    - name: Checkout repo
-          #      uses: actions/checkout@v2
+  deploy_to_kubernetes:
+    name: Deploy to Kubernetes
+    run-on: ubuntu-18.04
+    env:
+      RABBIT_USER: cryptoring
+      RABBIT_VHOST: "/"
+      COUCHDB_URL: "https://392550bc-ca75-4cde-8d0c-1b0126c80727-bluemix:ce44fad87976d433f3830521df8c1cc24e2a72e3026d8874b051344649436572@392550bc-ca75-4cde-8d0c-1b0126c80727-bluemix.cloudantnosqldb.appdomain.cloud"
 
-          #    - name: Install Helm Package
-          #      uses: wahyd4/kubectl-helm-action@master
-          #      env:
-          #        KUBE_CONFIG_DATA: ${{ secrets.KUBE_CONFIG_DATA }}
-          #      with:
-          #        args: |
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v2
 
+      - name: Install Helm Package
+        uses: wahyd4/kubectl-helm-action@master
+        env:
+          KUBE_CONFIG_DATA: ${{ secrets.KUBE_CONFIG_DATA }}
+        with:
+          args: |
+            helm upgrade --install -n cryptoring poloniex ./helmchart \
+            --set RABBIT_USER=${{ RABBIT_USER }} \
+            --set RABBIT_PASSWORD=${{ secrets.RABBIT_PASSWORD }} \
+            --set RABBIT_VHOST=${{ RABBIT_VHOST }} \
+            --set COUCHDB_URL=${{ COUCHDB_URL }} \
+            --set COUCHDB_LOGIN=${{ secrets.COUCHDB_LOGIN }} \
+            --set COUCHDB_PASSWORD={{ secrets.COUCHDB_PASSWORD }} \
+            --set API_KEY={{ secrets.API_KEY }} \
+            --set API_SECRET={{ secrets.API_SECRET }}
 
