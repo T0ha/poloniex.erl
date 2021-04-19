@@ -51,4 +51,5 @@ jobs:
           KUBE_CONFIG_DATA: ${{ secrets.KUBE_CONFIG_DATA }}
         with:
           args: |
-            helm upgrade --install poloniex -n cryptoring ./ops/helmchart/  --values ./ops/helmchart/values.yaml
+              helm version
+              helm upgrade --install poloniex -n cryptoring ./ops/helmchart/  --values ./ops/helmchart/values.yaml
