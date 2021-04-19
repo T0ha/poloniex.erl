@@ -45,11 +45,17 @@ jobs:
       - name: Checkout repo
         uses: actions/checkout@v2
 
-      - name: Install Helm Package
-        uses: wahyd4/kubectl-helm-action@master
-        env:
-          KUBE_CONFIG_DATA: ${{ secrets.KUBE_CONFIG_DATA }}
+      - name: Install Kubernetes tools
+        uses: yokawasa/action-setup-kube-tools@v0.6.0
         with:
-          args: |
-              helm version
-              helm upgrade --install poloniex -n cryptoring ./ops/helmchart/  --values ./ops/helmchart/values.yaml
+            kubectl: '1.17.1'
+            kustomize: '3.7.0'
+            helm: '2.16.7'
+            helmv3: '3.5.3'
+
+      - name: Install Helm Package
+        env:
+          KUBECONFIG: ${{ secrets.KUBE_CONFIG_DATA }}
+        run: |
+          helmv3 version
+          helmv3 upgrade --install poloniex -n cryptoring ./ops/helmchart/  --values ./ops/helmchart/values.yaml
