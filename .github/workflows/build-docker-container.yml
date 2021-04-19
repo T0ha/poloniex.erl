@@ -51,14 +51,4 @@ jobs:
           KUBE_CONFIG_DATA: ${{ secrets.KUBE_CONFIG_DATA }}
         with:
           args: |
-            helm upgrade --install poloniex -n cryptoring ./ops/helmchart/ \
-            --values ./ops/helmchart/values.yaml \
-            --set RABBIT_USER=${{ env.RABBIT_USER }} \
-            --set RABBIT_PASSWORD=${{ secrets.RABBIT_PASSWORD }} \
-            --set RABBIT_VHOST=${{ env.RABBIT_VHOST }} \
-            --set COUCHDB_URL=${{ env.COUCHDB_URL }} \
-            --set COUCHDB_LOGIN=${{ secrets.COUCHDB_LOGIN }} \
-            --set COUCHDB_PASSWORD=${{ secrets.COUCHDB_PASSWORD }} \
-            --set API_KEY=${{ secrets.API_KEY }} \
-            --set API_SECRET=${{ secrets.API_SECRET }}
-
+            helm upgrade --install poloniex -n cryptoring ./ops/helmchart/  --values ./ops/helmchart/values.yaml
