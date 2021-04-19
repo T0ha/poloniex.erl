@@ -51,7 +51,7 @@ jobs:
           KUBE_CONFIG_DATA: ${{ secrets.KUBE_CONFIG_DATA }}
         with:
           args: |
-            helm upgrade --install poloniex -n cryptoring ./ops/helmchart \
+            helm upgrade --install poloniex -n cryptoring ./ops/helmchart/ \
             --set RABBIT_USER=${{ env.RABBIT_USER }} \
             --set RABBIT_PASSWORD=${{ secrets.RABBIT_PASSWORD }} \
             --set RABBIT_VHOST=${{ env.RABBIT_VHOST }} \
