@@ -57,7 +57,6 @@ jobs:
         env:
           KUBE_CONFIG_DATA: ${{ secrets.KUBE_CONFIG_DATA }}
         run: |
-            echo $KUBECONFIG
-            echo "${{ env.KUBE_CONFIG_DATA }}" | base64 -d > ${KUBECONFIG}
-            helmv3 version
+            mkdir -p $HOME/.kube
+            echo "${{ env.KUBE_CONFIG_DATA }}" | base64 -d > ${HOME}/.kube/config
             helmv3 upgrade --install poloniex -n cryptoring ./ops/helmchart/  --values ./ops/helmchart/values.yaml
