@@ -46,6 +46,10 @@ jobs:
       - name: Checkout repo
         uses: actions/checkout@v2
 
+      - name: Get docker tag
+        id: short_sha
+        run: echo "::set-output name=sha_short::$(git rev-parse --short HEAD)"
+
       - name: Install Helm Package
         uses: wahyd4/kubectl-helm-action@master
         env:
@@ -53,7 +57,7 @@ jobs:
         with:
           args: |
             helm upgrade --install poloniex -n cryptoring ./ops/helmchart/ \
-            --set image.tag="$GITHUB_SHA" \
+            --set image.tag="sha-${{ steps.short_sha.outputs.sha_short }} \
             --set RABBIT_USER=${{ env.RABBIT_USER }} \
             --set RABBIT_PASSWORD=${{ secrets.RABBIT_PASSWORD }} \
             --set RABBIT_VHOST=${{ env.RABBIT_VHOST }} \
