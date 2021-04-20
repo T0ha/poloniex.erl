@@ -36,7 +36,7 @@ jobs:
   deploy_to_kubernetes:
     name: Deploy to Kubernetes
     runs-on: ubuntu-18.04
-    #needs: build_docker_image
+    needs: build_docker_image
     env:
       RABBIT_USER: cryptoring
       RABBIT_VHOST: "/"
@@ -53,7 +53,7 @@ jobs:
         with:
           args: |
             helm upgrade --install poloniex -n cryptoring ./ops/helmchart/ \
-            --set image.tag=${{ env.GITHUB_SHA }} \
+            --set image.tag=$GITHUB_SHA \
             --set RABBIT_USER=${{ env.RABBIT_USER }} \
             --set RABBIT_PASSWORD=${{ secrets.RABBIT_PASSWORD }} \
             --set RABBIT_VHOST=${{ env.RABBIT_VHOST }} \
