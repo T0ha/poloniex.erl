@@ -8,29 +8,30 @@ defaults:
     shell: bash
     
 jobs:
-  #build_docker_image:
-  #  name: Build Image
-  #  runs-on: ubuntu-18.04
-  #  steps:
-  #    - name: Checkout repo
-  #      uses: actions/checkout@v2
+  build_docker_image:
+    name: Build Image
+    runs-on: ubuntu-18.04
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v2
 
-  #    - name: SSH Agent init
-  #      uses: webfactory/ssh-agent@v0.5.2
-  #      with:
-  #        ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
+      - name: SSH Agent init
+        uses: webfactory/ssh-agent@v0.5.2
+        with:
+          ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
 
-  #    - name: Getting deps from host
-  #      run: ./rebar3 get-deps
+      - name: Getting deps from host
+        run: ./rebar3 get-deps
 
-  #    - name: Building and publishing an image
-  #      uses: docker/build-push-action@v1
-  #      with:
-  #        username: ${{ github.actor }}
-  #        password: ${{ secrets.GITHUB_TOKEN }}
-  #        registry: ghcr.io
-  #        repository: t0ha/cryptoring-poloniex
-  #        tag_with_ref: true
+      - name: Building and publishing an image
+        uses: docker/build-push-action@v1
+        with:
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+          registry: ghcr.io
+          repository: t0ha/cryptoring-poloniex
+          tag_with_ref: true
+          tag_with_sha: true
 
   deploy_to_kubernetes:
     name: Deploy to Kubernetes
@@ -52,6 +53,7 @@ jobs:
         with:
           args: |
             helm upgrade --install poloniex -n cryptoring ./ops/helmchart/ \
+            --set image.tag=${{ env.GITHUB_SHA }} \
             --set RABBIT_USER=${{ env.RABBIT_USER }} \
             --set RABBIT_PASSWORD=${{ secrets.RABBIT_PASSWORD }} \
             --set RABBIT_VHOST=${{ env.RABBIT_VHOST }} \
