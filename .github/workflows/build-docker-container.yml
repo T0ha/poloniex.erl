@@ -53,7 +53,7 @@ jobs:
         with:
           args: |
             helm upgrade --install poloniex -n cryptoring ./ops/helmchart/ \
-            --set image.tag=$GITHUB_SHA \
+            --set image.tag="$GITHUB_SHA" \
             --set RABBIT_USER=${{ env.RABBIT_USER }} \
             --set RABBIT_PASSWORD=${{ secrets.RABBIT_PASSWORD }} \
             --set RABBIT_VHOST=${{ env.RABBIT_VHOST }} \
