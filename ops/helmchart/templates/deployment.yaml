@@ -46,7 +46,9 @@ spec:
           #    path: /
           #    port: http
           livenessProbe:
-              exec: "./bin/poloniex ping"
+              exec: 
+                  command: 
+                      - "./bin/poloniex ping"
               initialDelaySeconds: 30
               periodSeconds: 20
           env:
