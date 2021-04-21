@@ -45,6 +45,10 @@ spec:
           #  httpGet:
           #    path: /
           #    port: http
+          livenessProbe:
+              exec: "./bin/poloniex ping"
+              initialDelaySeconds: 30
+              periodSeconds: 20
           env:
               - name: "RABBIT_USER"
                 valueFrom:
