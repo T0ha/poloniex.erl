@@ -2,14 +2,14 @@
 apiVersion: autoscaling/v2beta1
 kind: HorizontalPodAutoscaler
 metadata:
-  name: {{ include "cryptoring-poloniex.fullname" . }}
+  name: {{ include "poloniex.fullname" . }}
   labels:
-    {{- include "cryptoring-poloniex.labels" . | nindent 4 }}
+    {{- include "poloniex.labels" . | nindent 4 }}
 spec:
   scaleTargetRef:
     apiVersion: apps/v1
     kind: Deployment
-    name: {{ include "cryptoring-poloniex.fullname" . }}
+    name: {{ include "poloniex.fullname" . }}
   minReplicas: {{ .Values.autoscaling.minReplicas }}
   maxReplicas: {{ .Values.autoscaling.maxReplicas }}
   metrics:
